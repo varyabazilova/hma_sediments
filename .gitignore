@@ -1,0 +1,12 @@
+*.csv
+*.nc
+*.qgz
+*.pck
+*.xlsx
+*.url
+*.tif
+*.xml
+*.pyc
+downscaling/testdata
+*.ipynb_checkpoints
+*/__pycache__/
