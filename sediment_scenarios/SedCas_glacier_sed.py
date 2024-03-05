@@ -163,6 +163,7 @@ class SedCas():
 
         # --- save channel sediment storage at every time step
         sedout['sc'] = self.sed.sc
+        sedout['ls'] = self.sed.ls
 
         sedout['Qstl'] = self.sed.sopot[:,0]
         sedout['Qdftl'] = self.sed.dfspot          # save debris flows
