@@ -13,7 +13,7 @@ Tsa: 	 		0.6
 Tsm: 	 		0.5
 mrate: 	 		0.08
 alphaET: 	 	20.0
-LStrig:			'rainfall'
+LStrig:			'linear'
 Tpr:			7.9
 Tsd: 	 		20.0
 Tfreeze:		0
