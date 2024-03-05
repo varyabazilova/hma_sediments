@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Feb  3 16:07:40 2022
-edited on 13 Sep 2023
+edited on 5 March 2023 by varyabazilova
 
 @author: hirschbe
 """
@@ -797,9 +797,7 @@ def large_ls(T, Pr, snow, Tsd, Tpr, Tsa, xmin, alpha, cutoff, Tfreeze, LStrig, a
         lsdays = 1
         N = 1 # zero number of large landslides -> therefore there should be no small landslides either 
 
-    
-
----------- new: linear sediment recharge - end -----------
+# ---------- new: linear sediment recharge - end -----------
 
 
     # generate N large landslide magnitudes (volume, m3). iteration is needed in order to avoid unreasonable large volumes, greater than cutoff
