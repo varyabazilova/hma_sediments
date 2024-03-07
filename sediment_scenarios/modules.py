@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Feb  3 16:07:40 2022
-edited on 5 March 2023 by varyabazilova
+edited on 13 Sep 2023
 
 @author: hirschbe
 """
@@ -785,21 +785,6 @@ def large_ls(T, Pr, snow, Tsd, Tpr, Tsa, xmin, alpha, cutoff, Tfreeze, LStrig, a
         ids = [int(i) for i in ids]
         lsdays = ids
         
-
-
-# ---------- new: linear sediment recharge -----------
-# set the number of large landslides to 0 at every time step (at the same time-resolution as input climate)
-    if LStrig =='linear':
-        Prl = Pr.copy()
-        Prl_day = Prl.resample('24h').sum() # daily sums for the sake of keeping dimentions 
-        idx = Prl_day.index
-        lrg_ls = np.zeros(len(Prl_day))
-        lsdays = 1
-        N = 1 # zero number of large landslides -> therefore there should be no small landslides either 
-
-# ---------- new: linear sediment recharge - end -----------
-
-
     # generate N large landslide magnitudes (volume, m3). iteration is needed in order to avoid unreasonable large volumes, greater than cutoff
     # this is not effective computation...condition should be in randth
     cond=False
@@ -1009,7 +994,7 @@ def sedcas(Lls, Sls, hyd, qdf, smax, rhc, shcap, area, method, LStrig, Tpr, shin
             Sls[~(cond1 & cond2)] = 0
         
         ls = Lls.mag.copy() + Sls.mag.copy()
-
+    
     # test if too long
     i = np.argwhere(ls.index == q.index[-1])[0][0]
     ls = ls[:i+1]
