@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Feb  3 16:07:40 2022
-edited on 13 Sep 2023
 
 @author: hirschbe
 """
@@ -58,8 +57,6 @@ def degree_day_model(T, P, m, Ta, Tm, s0=0, Asnow=0.8, Asoil=0.3):
     
     # compute actual snow depth
     depth = np.zeros(len(P))
-    # make sure that the initial 'depth' equals the s0 input
-    depth[0] = s0
     ddepth = np.zeros(len(P))
     for i in range(1,len(P)):
         depth[i] = depth[i-1] + acc[i] - melt[i]
@@ -712,95 +709,138 @@ def randht(n, *varargin, seed='none'):
 ###############################################################################
 
 #%% PROBABILISTIC HILLSLOPE EROSION
-def large_ls(T, Pr, snow, Tsd, Tpr, Tsa, xmin, alpha, cutoff, Tfreeze, LStrig, area = 10.**6, seed='none'):
+# def large_ls(T, Pr, snow, Tsd, Tpr, Tsa, xmin, alpha, cutoff, Tfreeze, LStrig, area = 10.**6, seed='none'):
+#     '''
+#     Generation of large landslides by thermal trigger (procedure 1 in Bennett et al., 2014).
+#     Parameters taken from Bennett et al. (2012/13) are not altered.
+#     ---------------------
+    
+#     Input
+#     -----
+#     T : Temperature [degreeC]
+#     Pr : Precipitation [mm]
+#     snow : data frame from degree-day-model [mm SWE]
+#     Tsd : threshold snowdepth for landslides to be triggered [mm SWE]
+#     Tpr : threshold liquid precipitation for landslides to be triggered [mm]
+#     Tsa : Snow temperature accumulation threshold [°C]
+#     xmin : 
+#     alpha : 
+#     cutoff : 
+#     Tfreeze : 
+#     LStirg : Landslide triggering mechanism ['thermal', 'rainfall', 'random']
+#     area : catchment area [km2], default is 10^6, i.e. output can also be interpreted in [m3]
+#     seed : initialize random number generator
+    
+#     Output
+#     ------ 
+#     lrg_ls : time series of large land slides, [m3] if area not provided, else [mm]
+
+#     '''
+#     # parameters for large landslides distribution, from Bennett et al. (2012)
+    
+#     if (LStrig == 'thermal') or (LStrig == 'random'):
+#         # T and snow have to be resampled to daily mean
+#         T_day = T.resample('24h').mean()
+#         #T_day_1 = T_day.shift(1) # this is T of 1 day before
+#         idx = T_day.index
+#         T_day = T_day.values
+#         #T_day_1 = T_day_1.values
+#         snow_day = snow.resample('24h').mean()
+#         snow_day = snow_day.values
+        
+#         # a LS is triggered when T is subfreezing, the day before was not freezing and the snow depth is below threshold
+#         cond1 = T_day < Tfreeze                       # freezing days
+#         #cond2 = T_day_1 > 0                    # positive T days
+#         cond3 = snow_day < Tsd                  # days of only little snow
+#         #lsdays = cond1 & cond2 & cond3          # boolean array with days of possible landslides
+#         lsdays = cond1 & cond3
+#         N = len(lsdays[lsdays == True])         # number of big lansdslides
+        
+#         lrg_ls = np.zeros(len(T_day))
+    
+#     if LStrig == 'rainfall':
+#         Prl = Pr.copy()
+#         Prl[T<=Tsa] = 0 # liquid precipitation
+#         Prl_day = Prl.resample('24h').sum() # daily sums
+#         idx = Prl_day.index
+#         lsdays = Prl_day > Tpr
+#         N = len(lsdays[lsdays == True])
+        
+#         lrg_ls = np.zeros(len(Prl_day))
+    
+#     if LStrig == 'random':
+#         # N from thermal triggering
+#         nt = len(T_day)
+#         dt = int(nt/N)                       # mean (?) spacing between small landslides
+#         dtexp = np.random.exponential(dt, N)
+#         dtexp = np.ceil(dtexp)                  # get full days, in this case max one per day
+#         ids = np.cumsum(dtexp)
+#         if max(ids) >= nt:
+#             nids = ids/max(ids) * (nt-2) # if the days go beyond the time series length, rescale to length of time series // (t-2) to ensure max value after ceiling in next line as well
+#             nids = np.ceil(nids)
+#             ids = nids
+#         ids = [int(i) for i in ids]
+#         lsdays = ids
+        
+#     # generate N large landslide magnitudes (volume, m3). iteration is needed in order to avoid unreasonable large volumes, greater than cutoff
+#     # this is not effective computation...condition should be in randth
+#     cond=False
+#     while not cond:
+#         mags = randht(N,'xmin',xmin,'powerlaw', alpha, seed=seed) 
+#         cond = max(mags)<cutoff
+#         if not cond:
+#             seed = seed + 10000
+    
+#     #output
+#     lrg_ls[lsdays] = mags
+#     lrg_ls = lrg_ls / area * 10.**-3        # convert m3 to mm
+#     data = {'mag': lrg_ls}
+#     lrgls = pd.DataFrame(data, index=idx)
+    
+#     return lrgls
+
+
+# ------ fixed increase sediment ----------
+def large_ls_fixed_increase(T, area=10. ** 6):
     '''
-    Generation of large landslides by thermal trigger (procedure 1 in Bennett et al., 2014).
-    Parameters taken from Bennett et al. (2012/13) are not altered.
+    Generation of large landslides with fixed linear increase starting at 0.
     ---------------------
     
     Input
     -----
     T : Temperature [degreeC]
-    Pr : Precipitation [mm]
-    snow : data frame from degree-day-model [mm SWE]
-    Tsd : threshold snowdepth for landslides to be triggered [mm SWE]
-    Tpr : threshold liquid precipitation for landslides to be triggered [mm]
-    Tsa : Snow temperature accumulation threshold [°C]
-    xmin : 
-    alpha : 
-    cutoff : 
-    Tfreeze : 
-    LStirg : Landslide triggering mechanism ['thermal', 'rainfall', 'random']
     area : catchment area [km2], default is 10^6, i.e. output can also be interpreted in [m3]
-    seed : initialize random number generator
     
     Output
-    ------ 
+    ------
     lrg_ls : time series of large land slides, [m3] if area not provided, else [mm]
 
     '''
-    # parameters for large landslides distribution, from Bennett et al. (2012)
+    # T has to be resampled to daily mean
+    T_day = T.resample('24h').mean()
+    idx = T_day.index
     
-    if (LStrig == 'thermal') or (LStrig == 'random'):
-        # T and snow have to be resampled to daily mean
-        T_day = T.resample('24h').mean()
-        #T_day_1 = T_day.shift(1) # this is T of 1 day before
-        idx = T_day.index
-        T_day = T_day.values
-        #T_day_1 = T_day_1.values
-        snow_day = snow.resample('24h').mean()
-        snow_day = snow_day.values
-        
-        # a LS is triggered when T is subfreezing, the day before was not freezing and the snow depth is below threshold
-        cond1 = T_day < Tfreeze                       # freezing days
-        #cond2 = T_day_1 > 0                    # positive T days
-        cond3 = snow_day < Tsd                  # days of only little snow
-        #lsdays = cond1 & cond2 & cond3          # boolean array with days of possible landslides
-        lsdays = cond1 & cond3
-        N = len(lsdays[lsdays == True])         # number of big lansdslides
-        print(N)
-        lrg_ls = np.zeros(len(T_day))
-    
-    if LStrig == 'rainfall':
-        Prl = Pr.copy()
-        Prl[T<=Tsa] = 0 # liquid precipitation
-        Prl_day = Prl.resample('24h').sum() # daily sums
-        idx = Prl_day.index
-        lsdays = Prl_day > Tpr
-        N = len(lsdays[lsdays == True])
-        
-        lrg_ls = np.zeros(len(Prl_day))
-    
-    if LStrig == 'random':
-        # N from thermal triggering
-        nt = len(T_day)
-        dt = int(nt/N)                       # mean (?) spacing between small landslides
-        dtexp = np.random.exponential(dt, N)
-        dtexp = np.ceil(dtexp)                  # get full days, in this case max one per day
-        ids = np.cumsum(dtexp)
-        if max(ids) >= nt:
-            nids = ids/max(ids) * (nt-2) # if the days go beyond the time series length, rescale to length of time series // (t-2) to ensure max value after ceiling in next line as well
-            nids = np.ceil(nids)
-            ids = nids
-        ids = [int(i) for i in ids]
-        lsdays = ids
-        
-    # generate N large landslide magnitudes (volume, m3). iteration is needed in order to avoid unreasonable large volumes, greater than cutoff
-    # this is not effective computation...condition should be in randth
-    cond=False
-    while not cond:
-        mags = randht(N,'xmin',xmin,'powerlaw', alpha, seed=seed) 
-        cond = max(mags)<cutoff
-        if not cond:
-            seed = seed + 10000
-    
-    #output
-    lrg_ls[lsdays] = mags
-    lrg_ls = lrg_ls / area * 10.**-3        # convert m3 to mm
+    # generate N large landslide magnitudes (volume, m3) as a fixed linear increase starting at 0
+    mags = np.arange(len(T_day)) * 0.1  # fixed linear increase starting at 0
+
+    # output
+    lrg_ls = mags / area * 10. ** -3  # convert m3 to mm
     data = {'mag': lrg_ls}
     lrgls = pd.DataFrame(data, index=idx)
-    
+
     return lrgls
+
+
+
+
+
+
+
+
+
+
+
+# ------ end ---------
 
 def small_ls(t, N, xmin, area=10.**6, seed=None):
     '''
@@ -985,10 +1025,10 @@ def sedcas(Lls, Sls, hyd, qdf, smax, rhc, shcap, area, method, LStrig, Tpr, shin
         
         Sls.index = dates
         Sls = Sls.resample(freq).pad()
-        if 'datetime' in str(Sls.index.dtype):
+        if 'datetime' in Sls.index.dtype_str:
             cond = Sls.index.time == pd.to_datetime('12:00').time()     # hillslope failure always happen at noon
             Sls[~cond] = 0                                              # set the other hours to 0
-        elif 'timedelta' in str(Sls.index.dtype):
+        elif 'timedelta' in Sls.index.dtype_str:
             cond1 = Sls.index.astype('timedelta64[h]').astype('int64') % 12 == 0
             cond2 = Sls.index.astype('timedelta64[h]').astype('int64')/12 % 2 == 1
             Sls[~(cond1 & cond2)] = 0
