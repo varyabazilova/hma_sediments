@@ -131,26 +131,29 @@ class SedCas():
         # sediment module with stochastic landslide magnitudes
         print('running sediment module...', sep='\n', end='\n')
         seed = 0
-        for m in tqdm(range(self.M)):  
-            # lrgls = mod.large_ls(self.Ta, self.Pr, self.hydro.snow, self.Tsd, self.Tpr, self.Tsa, self.ls_xmin, self.ls_alpha, self.ls_cutoff, self.Tfreeze, self.LStrig, self.area, seed=seed)                # large landslided
-            lrgls = mod.large_ls_fixed_increase(self.Ta, self.area)
-
-            N = len(lrgls[lrgls.mag > 0])
-            sls = mod.small_ls(n_days, N, self.ls_xmin, self.area, seed=seed)                         # small landslides
-            sls.index = lrgls.index                                     # date index for small landslides
-           
             # ------ new sediment production mechanism -----------
             # edited 7th March '24 by varyabazilova
             # landslides are supposed to fill channel sediment storage (sc) "linearly" 
             # we create a new method to keep the same variables for the model
             # NB: cleaner way would be to have it as a separate separate sedoment production/landslide triggering machanism (LStrig) in the parameters
-            # but for now here:
 
-            # lrgls = 0                # large landslided
-            # N = 0
-            # sls = 0                       # small landslides
-            # sls.index = lrgls.index                                     # date index for small landslides
 
+        for m in tqdm(range(self.M)):  
+
+            # lrgls = mod.large_ls(self.Ta, self.Pr, self.hydro.snow, self.Tsd, self.Tpr, self.Tsa, self.ls_xmin, self.ls_alpha, self.ls_cutoff, self.Tfreeze, self.LStrig, self.area, seed=seed)                # large landslided
+            # fixed increase in the landslided
+            lrgls = mod.large_ls_fixed_increase(self.Ta, self.area)
+
+            # N = len(lrgls[lrgls.mag > 0])
+            # sls = mod.small_ls(n_days, N, self.ls_xmin, self.area, seed=seed)                         # small landslides
+        
+            # small land slides need to be all zero!
+            sls = mod.zeros_time_series(n_days)                         # small landslides
+
+
+            sls.index = lrgls.index                                     # date index for small landslides
+           
+        
 
             sed_run = mod.sedcas(lrgls, sls, self.hydro, self.qdf, self.smax, self.rhc, self.shcap, self.area, 'exp', self.LStrig, self.Tpr, shinit=self.shcap, mindf=self.mindf, smax_nodf=self.smax_nodf, b=self.b)
             sed.ls[:,m] = sed_run.ls.values

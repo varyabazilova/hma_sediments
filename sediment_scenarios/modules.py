@@ -831,16 +831,22 @@ def large_ls_fixed_increase(T, area=10. ** 6):
     return lrgls
 
 
+# new small landslides: make it so that there is no small landslides happenning
 
 
+def zeros_time_series(t):
+    s_ls = np.zeros(t)
 
+    data = {'mag': s_ls}
+    sls = pd.DataFrame(data=data)
 
-
-
-
+    return sls
 
 
 # ------ end ---------
+
+
+
 
 def small_ls(t, N, xmin, area=10.**6, seed=None):
     '''
