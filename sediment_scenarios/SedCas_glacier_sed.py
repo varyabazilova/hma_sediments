@@ -144,7 +144,7 @@ class SedCas():
             # fixed increase in the landslided
             lrgls = mod.large_ls_fixed_increase(self.Ta, self.area)
 
-            # N = len(lrgls[lrgls.mag > 0])
+            N = len(lrgls[lrgls.mag > 0])
             # sls = mod.small_ls(n_days, N, self.ls_xmin, self.area, seed=seed)                         # small landslides
         
             # small land slides need to be all zero!
