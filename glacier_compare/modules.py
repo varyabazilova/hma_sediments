@@ -821,7 +821,7 @@ def large_ls_fixed_increase(T, area=10. ** 6):
     idx = T_day.index
     
     # generate large landslide magnitudes (volume, m3) 
-    mags = np.full(len(T_day), 50)
+    mags = np.full(len(T_day), 200)
     # mags = np.arange(len(T_day)) * 0.1  # fixed linear increase starting at 0
 
 

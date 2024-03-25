@@ -8,7 +8,7 @@ project:
         - adjusted: bazilova v 
     date: Feb 2024
     directory: ./
-    start: 1997-12-01
+    start: 2004-12-01
     end: 2023-12-31
     split:
         IO: False
@@ -24,7 +24,7 @@ climate:
         product: reanalysis
         timestep: 1H
         plevels: [350,400,450,500,550,600,650,700,750,775,800,825, 850, 875, 900, 925, 950]
-        download_threads: 17
+        download_threads: 30
         realtime: False
     precip_lapse_rate: False
 
